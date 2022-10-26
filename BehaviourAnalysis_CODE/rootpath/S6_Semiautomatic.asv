@@ -1,0 +1,639 @@
+%% David Madrid . Last Rev 27/04/2022
+%%                SEMIAUTOMATIC SWIMMING ANALYSIS
+
+%% This part is independent of being a SIE or SW. Can be modified for example: when you have SIE high FR
+% you want to analyze the frequency you need to do the semiautomatic but
+% when you are mesurring just SW low frame rate yo just want to check
+% velocity and other parameters that dont require that level of precision.
+% BUT, if you have SW high FR you want to have that level of precision so
+% you may want to do the semiautomatic in these videos. 
+
+if isequal(TypeExperiment,'ES') % Normaly the semiautomatic is for the SIE. if you modify from SIE TO
+    % SW be aware that SW does not have laserframes because there is not
+    % light
+
+    % For now, the tarce that will be analyzed will be the sum of the angles
+    wave =  SumAng3D;
+    % wave = medfilt1(wave);
+    %plot(frameAxisInter,wave)
+    %plot(abs(wave))
+
+    %{
+
+%% CUTTING THE TRACE 
+
+
+
+% 1. Cut swim trace if activity can not be analyzed
+
+% Plot for visual checking
+plot(frames,wave)
+grid on
+pause(0.5)
+
+prompt = {'Do you want to cut the trace?'};
+dlgtitle = 'Input';
+dims = [1 35];
+
+definput ={'N'};
+answer = inputdlg(prompt,dlgtitle,dims,definput);
+answer = char(answer);
+
+if isequal(answer,'Y')
+
+    disp(['Click  once at the begining of the segmenet that you want to cut and' ...
+        'twice at the end'])
+
+    [x_time,~] = getpts;
+
+    % Set initial and terminal points (x-values). 
+    XCUT1 = round(x_time(1)); % Initial x value where you want to start cutting
+    XCUT2 = round(x_time(2)); % Final x value where you want to stop cutting
+
+
+    substraction_swim = abs(frames-XCUT1);
+    xi_swim_cutted = find(substraction_swim==min(substraction_swim));
+    clear  substraction_swim % Erase temporal variable
+
+    %Next we perform the same for the XCUT2
+    %For the swimming
+    substraction_swim = abs(frames-XCUT2);
+    xf_swim_cutted = find(substraction_swim==min(substraction_swim));
+    clear substraction_swim % Erase temporal variable
+
+
+    % For the swimming
+
+     frames = ...
+        frames(xi_swim_cutted:xf_swim_cutted);
+
+     wave= ...
+        wave(xi_swim_cutted:xf_swim_cutted);
+
+     Vec3D % need to be cut
+
+     Ang3D % need to be cut
+
+     % Also other variable need to be cutted
+
+end 
+
+    %}
+
+    % PEAKS IDENTIFICATION AND CLEANING OF THE SWIMMING/ ANGLE TRACE
+
+
+    % ---------VISUAL CHECKING FO THE PEAKS (SET UP PEAKS THERSHOLD)
+
+    sidepeaks =10; % Initial value of the threshold for the peaks
+
+    % Plot for visual checking
+    figure('units','normalized','outerposition',[0 0 1 1])
+    findpeaks(wave,Nfactor,'MinPeakProminence',sidepeaks);
+    %xline(laserframeON)
+    %xline(laserframeOFF)
+
+    pause(0.5) % Time to plot the figure
+
+    % This lil prompt will ask if you are satisfy or not, if the str=N,
+    % means that you dont want to modify  the threeshold
+    prompt = 'PEAKS: If you want to modify the threshold for the peaks type "Y", if you are satisfy type "N" : ';
+    str = input(prompt,'s');
+    if isempty(str)
+        str = 'N';
+        close
+    else
+
+    end
+
+
+    % If the answer is str=Y you will enter in a while loop that will allow you
+    % to change the value of the threshold until you are satisfy
+
+    while isequal(str,'Y')
+
+        pause(1)
+
+        prompt = {'Enter Threshold:'};
+        dlgtitle = 'Input';
+        dims = [1 35];
+
+        definput ={sprintf('%.0f',sidepeaks)};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        sidepeaks = str2double(answer(1));
+        cla
+        findpeaks(wave,Nfactor,'MinPeakProminence',sidepeaks);
+        %xline(laserframeON)
+        %xline(laserframeOFF)
+
+        pause(0.5)
+
+        prompt = 'PEAKS: If you want to modify the threshold for the peaks type "Y", if you are satisfy type "N" : ';
+        str = input(prompt,'s');
+
+        if isempty(str)
+            str = 'N';
+            close
+        end
+
+    end
+
+    close all
+
+
+    % ------------ VISUAL CHECKING FOR THE TROUGHS (SET UP TROUGHS THERSHOLD)
+
+    sidetroughts = 10; % Initial value of the threshold for the troughs
+
+    % Plot for visual checking
+    
+    figure('units','normalized','outerposition',[0 0 1 1])
+    findpeaks(-wave,Nfactor,'MinPeakProminence',sidetroughts);
+    %xline(laserframeON)
+    %xline(laserframeOFF)
+
+    pause(0.5) % Time to plot the figure
+
+    % This lil prompt will ask if you are satisfy or not, if the str=N,
+    % means that you dont want to modify  the threeshold
+    prompt = 'TROUGHS: If you want to modify the threshold for the peaks type "Y", if you are satisfy type "N" : ';
+    str = input(prompt,'s');
+    if isempty(str)
+        str = 'N';
+        close
+    else
+
+    end
+
+
+    % If the answer is str=Y you will enter in a while loop that will allow you
+    % to change the value of the threshold until you are satisfy
+
+    while isequal(str,'Y')
+
+        pause(1)
+
+        prompt = {'Enter Threshold:'};
+        dlgtitle = 'Input';
+        dims = [1 35];
+
+        definput ={sprintf('%.0f',sidetroughts)};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        sidetroughts = str2double(answer(1));
+        cla
+        findpeaks(-wave,Nfactor,'MinPeakProminence',sidetroughts);
+        %xline(laserframeON)
+        %xline(laserframeOFF)
+        pause(0.5)
+
+        prompt = 'TROUGHS: If you want to modify the threshold for the peaks type "Y", if you are satisfy type "N" : ';
+        str = input(prompt,'s');
+
+        if isempty(str)
+            str = 'N';
+            close
+        end
+
+    end
+
+    close all
+
+
+    clear prompt str dlgtitle dims definput answer
+    % -------------------------------------------------------------------------------------------------------
+    % -------------------------------------------------------------------------------------------------------
+
+
+    %                           FINDING PEAKS AND TROUGHS
+
+
+
+    %----------------------    Finding and removing peaks
+
+    figure('units','normalized','outerposition',[0 0 1 1])
+    findpeaks(wave,Nfactor,'MinPeakProminence',sidepeaks); hold on
+    [pks1,locs1] = findpeaks(wave,Nfactor,'MinPeakProminence',sidepeaks);
+    %xline(laserframeON)
+    %xline(laserframeOFF)
+
+    pause(0.5)
+
+    prompt = 'PEAKS: If you want to remove some peaks "Y", if you are satisfy type "N" : ';
+
+    str = input(prompt,'s');
+    
+    if isequal(str,'N')
+        str = 'N';
+        close
+
+    elseif isequal(str,'Y')
+
+        disp('Clik on the peaks that you want to remove, double click in the last one.Push delete to remove a point')
+        [x_time,~] = getpts;
+
+
+        % Finding closest match
+        removing = NaN(1,length(x_time)); % Prelocate
+        for i=1:length(x_time)
+            removing(i) = find(abs(locs1-x_time(i))==min(abs(locs1-x_time(i))));
+        end
+
+        % Removing this index values from the peaks and locs vectors
+        pks1(removing) = [];
+        locs1(removing) = [];
+
+        % Testing
+
+        scatter(locs1,pks1,30,'filled','g')
+        pause(0.5)
+
+
+        prompt = 'Now you can zoom in. If you want to keep removing points type "Y", if you are satisfy type "N" : ';
+        str = input(prompt,'s');
+
+        if isempty(str)
+            str = 'N';
+            close
+        end
+
+
+        while isequal(str,'Y')
+            [x_time,~] = getpts;
+            % Finding closest match
+            removing = NaN(1,length(x_time)); % Prelocate
+            for i=1:length(x_time)
+                removing(i) = find(abs(locs1-x_time(i))==min(abs(locs1-x_time(i))));
+            end
+
+            % Removing this index values from the peaks and locs vectors
+            pks1(removing) = [];
+            locs1(removing) = [];
+            cla
+            findpeaks(wave,Nfactor,'MinPeakProminence',sidepeaks); hold on
+            scatter(locs1,pks1,30,'filled','g')
+            pause(0.5)
+            prompt = 'Now you can zoom in. If you want to keep removing points type "Y", if you are satisfy type "N" : ';
+            str = input(prompt,'s');
+
+            if isempty(str)
+                str = 'N';
+                close
+            end
+        end
+    end
+
+
+    clear x_time y_time removing
+    close all
+
+
+
+    % -------------     Finding  and removing troughs
+
+
+    figure('units','normalized','outerposition',[0 0 1 1])
+    findpeaks(-wave,Nfactor,'MinPeakProminence',sidetroughts); hold on
+    [pks2,locs2] = findpeaks(-wave,Nfactor,'MinPeakProminence',sidetroughts);
+    %xline(laserframeON)
+    %xline(laserframeOFF)
+
+    pause(0.5)
+
+    prompt = 'TROUGHS: If you want to remove some peaks "Y", if you are satisfy type "N" : ';
+    str = input(prompt,'s');
+
+    if isequal(str,'N')
+        str = 'N';
+        close
+
+    elseif isequal(str,'Y')
+        disp('Clik on the troughs that you want to remove, double click in the last one. Push delete to remove a point')
+        [x_time,~] = getpts;
+
+
+        % Finding closest match
+        removing = NaN(1,length(x_time)); % Prelocate
+        for i=1:length(x_time)
+            removing(i) = find(abs(locs2-x_time(i))==min(abs(locs2-x_time(i))));
+        end
+        % Removing this index values from the peaks and locs vectors
+        pks2(removing) = []; locs2(removing) = [];
+
+        % Testing
+
+        scatter(locs2,pks2,30,'filled','g')
+        pause(0.5)
+
+        prompt = 'If you want to keep removing points type "Y", if you are satisfy type "N" : ';
+        str = input(prompt,'s');
+
+        if isempty(str)
+            str = 'N'; % you are done
+            close
+        end
+
+
+        while isequal(str,'Y') % if the answe is yes you enter in a while loop to elimite other peaks
+            [x_time,~] = getpts;
+            % Finding closest match
+            removing = NaN(1,length(x_time)); % Prelocate
+            for i=1:length(x_time)
+                removing(i) = find(abs(locs2-x_time(i))==min(abs(locs2-x_time(i))));
+            end
+
+            % Removing this index values from the peaks and locs vectors
+            pks2(removing) = [];
+            locs2(removing) = [];
+            cla
+            findpeaks(-wave,Nfactor,'MinPeakProminence',sidetroughts); hold on
+            scatter(locs2,pks2,30,'filled','g')
+            pause(0.5)
+
+            prompt = 'If you want to keep removing points type "Y", if you are satisfy type "N" : ';
+            str = input(prompt,'s');
+
+            if isempty(str)
+                str = 'N'; % you are done
+                close
+            end
+        end
+    end
+
+
+    clear x_time y_time removing
+    close all
+
+    % Ploting everything together
+
+    figure('units','normalized','outerposition',[0 0 1 1])
+    subplot(211)
+    title('Peaks')
+    findpeaks(wave,Nfactor,'MinPeakProminence',sidepeaks); hold on
+    scatter(locs1,pks1,30,'filled','g')
+    %xline(laserframeON)
+    %xline(laserframeOFF)
+
+    subplot(212)
+    title('Troughs')
+    findpeaks(-wave,Nfactor,'MinPeakProminence',sidetroughts); hold on
+    scatter(locs2,pks2,30,'filled','g')
+    %xline(laserframeON)
+    %xline(laserframeOFF)
+    uiwait
+    close all
+    clear prompt str
+
+    %%                        MANTEINING THE SING OF PEAKS AND TROUHTS
+
+    sign_retention = NaN(1,length([locs1; locs2]));
+    time_vector_sing = sort ( [locs1; locs2] );
+    for i=1:length(time_vector_sing)
+        if any(time_vector_sing(i) == locs1)
+            temp_mantain =  any(time_vector_sing(i) == locs1);
+            sign_retention (i) = pks1(temp_mantain);
+
+
+        elseif any(time_vector_sing(i) == locs2)
+            temp_mantain =  any(time_vector_sing(i) == locs2);
+            sign_retention (i) = -pks2(temp_mantain);
+
+        end
+    end
+
+    % We will take just the fact that is positive (1) or negative (-1)
+
+    for i=1:length(sign_retention )
+        if sign_retention (i)>0
+            sign_retention (i) = 1;
+        else
+            sign_retention (i) = -1;
+        end
+    end
+
+    clear i temp_mantain
+    %%                      AISLATION OF SWIMMING EPISODES AND BASELINE PER EACH EPISODE (MANUAL)
+
+    % Select manually a segment that contains each episode. So each two consectuve number in
+    % vector created will correspondto the start and end of the segmenet and
+    % the swimming episode will be contain in that segment.
+    frameAxisInter =0:0.01:length(wave)/100; 
+    frameAxisInter = frameAxisInter(1:end-1);
+
+    clear points
+    figure('units','normalized','outerposition',[0 0 1 1])
+
+    plot(frameAxisInter,wave), hold on
+    title('EXTRACTING SWIMMING EPISODES')
+
+    disp('You can zoom in now')
+
+    pause(0.5)
+
+    prompt = 'Do you want to select another episodes "Y", if you are satisfy type "N" : ';
+    str = input(prompt,'s');
+    suma = 0;
+
+    while isequal(str,'Y')
+
+        disp('click a two times. Inside two points you must find a swimming episode.')
+        [x_time,~] = getpts; %@
+
+        points(1,[1+suma 2+suma]) = x_time;
+        prompt = 'Do you want to select another episodes "Y", if you are satisfy type "N" : ';
+        str = input(prompt,'s');
+        clear x_time
+        suma = suma + 2;
+
+    end
+
+    clear prompt str dlgtitle dims definput answer
+
+    %     FOR THE BASELINE OF EACH EPISODE
+
+    clear points_B
+
+    plot(frameAxisInter,wave), hold on
+    title('EXTRACTING BASELINE OF EACH EPISODES')
+
+    disp('Select a small segment right before the first peak of each episode')
+    disp('You can zoom in now')
+
+    prompt = 'Do you want to select another baseline "Y", if you are satisfy type "N" : ';
+    str = input(prompt,'s');
+    suma = 0;
+
+    while isequal(str,'Y')
+
+        disp('click a two times. Inside two points you must find a swimming episode.')
+        [x_time_B,~] = getpts; %@
+
+        points_B(1,[1+suma 2+suma]) = x_time_B;
+        prompt = 'Do you want to select another baseline "Y", if you are satisfy type "N" : ';
+        str = input(prompt,'s');
+        clear x_time_B
+        suma = suma + 2;
+
+    end
+
+
+    clear prompt str dlgtitle dims definput answer
+
+    x_time= sort(points); % Swimming episodes
+    x_time_B = sort(points_B); % baselines for each episodes
+
+
+    % We need to have even number in the x_time variable: Control test
+    if rem(length(x_time), 2) == 0 && rem(length(x_time_B), 2)==0 &&...
+            length(x_time)==length(x_time_B)
+
+    else
+        error('The number of points is not even or more beaselines than episodes or the opposite')
+    end
+
+
+
+    % Finfing the indexs that correspond with the points we just got
+    xi_baseline_swim = NaN(1,length(x_time_B));
+    for i=1:length(x_time_B)
+        substraction = abs(frameAxisInter-x_time_B(i));
+        xi_baseline_swim (i) = find(substraction==min(substraction))-1;
+        clear substraction % Erase temporal variable
+    end
+
+    % Computating the avrg
+
+    baseline_swimming = NaN(1:length(x_time_B)/2);
+    std_baseline = NaN(1,length(x_time_B)/2);
+
+    suma = 0;
+    for i=1:length(x_time_B)/2
+        baseline_swimming (i)=...
+            mean(wave([xi_baseline_swim(1+suma):xi_baseline_swim(2+suma)])); %avrg
+
+        std_baseline (i) = std(wave([xi_baseline_swim(1+suma):xi_baseline_swim(2+suma)])); %std
+        suma = suma + 2;
+    end
+    % Next we will select the locs1 and locs2 that are within each segment and
+    % we sort the elements
+
+
+    suma = 0;
+    sum1 = 0;
+    for k=1:2:length(x_time)
+        my_field1 = strcat('swm_',num2str(k)); % Creating dinamicly the
+        % name of the field
+        my_field2 = strcat('swm_',num2str(k));
+        index1 = find((locs1>x_time(k) & locs1<x_time(k+1))); % This will
+        % find  all the values of locs1 inside each interval
+        index2 = find((locs2>x_time(k) & locs2<x_time(k+1))); % This will
+        % find  all the values of locs2 inside each interval
+        EPISODE_X.(my_field1) = sort([locs1(index1);locs2(index2)]); % we put
+        %everything in a column and sort it.
+        EPISODE_Y.(my_field2) = wave(floor((EPISODE_X.(my_field1)*100)));
+        BASELINE_PER_EPISODE.(my_field2) =  baseline_swimming(k-suma);
+        temp_var = sort([locs1(index1);locs2(index2)]);
+        temp_var_2 = linspace(xi_baseline_swim(1 + sum1)./Nfactor, xi_baseline_swim(2 + sum1)./Nfactor,100);
+        plot(temp_var_2,baseline_swimming(k-suma)*ones(1,length(temp_var_2)),'R','LineWidth',3);
+        plot(temp_var,baseline_swimming(k-suma).*ones(size(temp_var)),'g','LineWidth',6);
+
+        clear temp_var temp_var_2
+        suma = suma + length(suma);
+        sum1 = sum1 +2;
+    end
+    scatter(locs2,-pks2,50,'g','*')
+    scatter(locs1,pks1,50,'g','*')
+
+    % Now the variable EPISODES has a number of variables that correspond with
+    % each swimming episode
+
+    pause(2)
+
+    close all
+
+
+    %%
+    % EXTRACTING THE GENERAL BASELINE FOR SWIMMING
+    figure('units','normalized','outerposition',[0 0 1 1])
+    plot(frameAxisInter,wave), hold on
+    title('EXTRACTING GENERAL BASELINE')
+    disp(['Click once at the begining of the segment that you want to use ' ...
+        'as a baseline, and twice at the end of it.'])
+    [x_time,~] = getpts; %@
+    cla
+
+    % Control just to be sure we select 2 points
+    if length(x_time)>2
+        error('You click more the two points')
+    elseif length(x_time)<2
+        error('You click just the first point')
+    end
+
+    % Finfing the indexs that correspond with the points we just got
+    for i=1:size(x_time,1)
+        substraction = abs(frameAxisInter-x_time(i,1));
+        xi_baseline_swim (i) = find(substraction==min(substraction));
+        clear substraction % Erase temporal variable
+    end
+
+    % Computating the avrg
+    baseline_swimming_gen=...
+        mean(wave([xi_baseline_swim(1):xi_baseline_swim(2)])); %avrg
+
+    std_baseline_gen = std(wave([xi_baseline_swim(1):xi_baseline_swim(2)])); %std
+
+    %Visual test
+    plot(frameAxisInter,wave), hold on
+    plot(frameAxisInter,baseline_swimming_gen*ones(size(frameAxisInter)),'g','LineWidth',4);
+    pause(2)
+
+    close all
+
+    %%              SWIMMING POWER (USING THE AMPLITUDE TO THE BASELINE FOR EACH EPISODE)
+
+    % We will use the baseline per EACH EPIOSDE. If you want to use the
+    % general baseline like tempor
+    %       tempor = baseline_swimming_gen;
+    tempor = baseline_swimming;
+
+    for i=1:length(fieldnames(EPISODE_Y)) %Loop across all the swimming episodes
+        temp = fieldnames(EPISODE_Y); % We use the "Y" because we need the value of the peaks
+        %for each episode
+        my_field = char(temp(i)); % In each loop this variables will take the name of
+        % one of the fields (one of the swimming episodes)
+        EPISODE_Y_BASELINE_AMP.(my_field) = abs(EPISODE_Y.(my_field)-tempor(i)); % we create
+        % this new structure that will have positive amplitudes from the
+        % baseline to the peaks
+        EPISODE_Y_BASELINE_AMP_SIGN.(my_field) = EPISODE_Y.(my_field)-tempor(i);
+        EPISODE_Y_BASELINE_AMP_AVGR.(my_field) = mean(EPISODE_Y_BASELINE_AMP.(my_field));% we create
+        % this new structure that will have averages from the
+        % baseline to the peaks
+
+        %Normalize the the amplitude to the baseline
+        maxim(i) = max(EPISODE_Y_BASELINE_AMP.(my_field)); % This variable contain all the max for each
+        %swimming episode
+        maxmaxim = max(maxim); % this variable contain the maximal amplitude during the whole recording
+        EPISODE_Y_BASELINE_AMP_NORM.(my_field) = EPISODE_Y_BASELINE_AMP.(my_field)./maxmaxim; %This struct
+        % is the same that EPISODE_Y_BASELINE_AMP.(my_field) but normalized.
+        EPISODE_Y_BASELINE_AMP_AVGR_NORM.(my_field) = mean(EPISODE_Y_BASELINE_AMP_NORM.(my_field)); %This struct
+        % is the same that EPISODE_Y_BASELINE_AMP_AVGR.(my_field) but normalized.
+
+    end
+
+
+    %%                              EPISODES WITH SIGN
+
+    acum = 0;
+    for i = 1:length(fieldnames(EPISODE_X))
+        myfield = fieldnames(EPISODE_X);
+        temp_sing = char(myfield(i));
+
+        numer = length(EPISODE_Y_BASELINE_AMP.(temp_sing));
+
+        EPISODE_BASELINE_AMP_SIGN.(temp_sing) = sign_retention ([acum+1:acum + numer]);
+        acum = numer + acum;
+    end
+
+elseif isequal(TypeExperiment,'SW') % Here normally is for the SW
+end
+
+

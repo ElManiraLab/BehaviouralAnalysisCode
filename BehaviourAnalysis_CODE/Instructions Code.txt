@@ -1,0 +1,29 @@
+FOR THIS CODE TO WORK EACH NAME OF A FILE MUST HAVE A UNIQUE NAME, INCLUDING IN THIS ONE
+ALL THE VARIABLES THAT MAKES THAT FILE UNIQUE (I.E. WEEK, ABLATED, FISH NUMBER, TRIAL,...ETC.). 
+
+Folder organization: 
+
+--Name Of the project
+
+----- Data 
+
+---------- Subfolders will be automatically created according to the name of the files
+
+----- DLC_output
+
+---------- Original videos (.avi), Labelled videos (.mp4) and CSV files (.csv) 
+
+----- Rootpath
+
+---------- Code and functions
+
+
+Code must be run from inside of the rootpath folder. 
+
+
+PIPLINE.
+
+1. Create a folder with the Name of your project. 
+2. Copy the rootpath folder inside. 
+3. Go inside rootpath folder and open on Matlab the "Main" script. 
+4. Run it and follow the instractions that will appear on the terminal. 
